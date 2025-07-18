@@ -883,6 +883,9 @@ if(!isset($_SESSION['user_id'])) {
                 gap: 8px;
             }
         }
+        a {
+    text-decoration: none;
+  }
     </style>
 </head>
 <body>
@@ -925,9 +928,9 @@ if(!isset($_SESSION['user_id'])) {
                 <h1>Find <span>Trusted Professionals</span> For All Your Needs</h1>
                 <p>Book verified workers for any task at your convenience. Fast, reliable, and hassle-free service.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Find a Worker</button>
-                    <button class="btn btn-secondary">Join as a Worker</button>
-                </div>
+    <a href="research_bookWorker.php" class="btn btn-primary">Find a Worker</a>
+    <a href="research_joinAsWorker.php" class="btn btn-secondary">Join as a Worker</a>
+</div>
             </div>
         </div>
         
@@ -937,9 +940,9 @@ if(!isset($_SESSION['user_id'])) {
                 <h1><span>Premium Services</span> At Your Doorstep</h1>
                 <p>From plumbing to cleaning, we connect you with the best professionals in your area.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Find a Worker</button>
-                    <button class="btn btn-secondary">Join as a Worker</button>
-                </div>
+    <a href="research_bookWorker.php" class="btn btn-primary">Find a Worker</a>
+    <a href="research_joinAsWorker.php" class="btn btn-secondary">Join as a Worker</a>
+</div>
             </div>
         </div>
         
@@ -949,9 +952,9 @@ if(!isset($_SESSION['user_id'])) {
                 <h1>Join Our Growing <span>Community</span> Today</h1>
                 <p>Earn competitive income by offering your skills and services to thousands of customers.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Find a Worker</button>
-                    <button class="btn btn-secondary">Join as a Worker</button>
-                </div>
+    <a href="research_bookWorker.php" class="btn btn-primary">Find a Worker</a>
+    <a href="research_joinAsWorker.php" class="btn btn-secondary">Join as a Worker</a>
+</div>
             </div>
         </div>
         
@@ -1140,7 +1143,8 @@ if(!isset($_SESSION['user_id'])) {
                         </div>
                     </div>
                     
-                    <button class="btn btn-primary" style="margin-top: 25px; padding: 10px 25px;">Find a Worker Now</button>
+                    <!-- <button class="btn btn-primary" style="margin-top: 25px; padding: 10px 25px;">Find a Worker Now</button> -->
+                    <a href="research_bookWorker.php" class="btn btn-primary">Find a Worker Now</a>
                 </div>
                 <div class="customer-image">
                     <img src="https://media1.thehungryjpeg.com/thumbs2/ori_3746963_xyilhzpcdlfl28ei1uch003889m2z4mgdfwvxnb7_happy-client-vector-customer-person-shaking-hands-partnership-important-client-business-connection-isolated-flat-cartoon-character-illustration.jpg" alt="Customer Image" style="width: 100%; height: auto; border-radius: 14px;">
@@ -1200,7 +1204,8 @@ if(!isset($_SESSION['user_id'])) {
                         </div>
                     </div>
                     
-                    <button class="btn btn-secondary" style="margin-top: 25px; padding: 10px 25px;">Join as a Worker</button>
+                    <!-- <button class="btn btn-secondary" style="margin-top: 25px; padding: 10px 25px;">Join as a Worker</button> -->
+                    <a href="research_joinAsWorker.php" class="btn btn-secondary">Join as a Worker</a>
                 </div>
             </div>
         </div>
@@ -1265,9 +1270,9 @@ if(!isset($_SESSION['user_id'])) {
             <h2>Ready to Experience Premium Service?</h2>
             <p>Join thousands of satisfied customers and skilled professionals on our platform today.</p>
             <div class="hero-buttons">
-                <button class="btn btn-darker">Find a Worker</button>
-                <button class="btn btn-secondary">Become a Worker</button>
-            </div>
+    <a href="research_bookWorker.php" class="btn btn-darker">Find a Worker</a>
+    <a href="research_joinAsWorker.php" class="btn btn-secondary">Become a Worker</a>
+</div>
         </div>
     </section>
 

@@ -887,6 +887,74 @@ session_start();
                 gap: 8px;
             }
         }
+        /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .modal-content {
+    background-color: var(--white);
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 450px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: modalOpen 0.4s;
+  }
+  
+  @keyframes modalOpen {
+    from {opacity: 0; transform: translateY(-60px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+  
+  .modal-icon {
+    font-size: 3.5rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+  }
+  
+  .modal-content h2 {
+    color: var(--primary);
+    margin-bottom: 15px;
+  }
+  
+  .modal-content p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    color: var(--text-light);
+  }
+  
+  .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .close:hover {
+    color: var(--accent);
+  }
     </style>
 </head>
 
@@ -922,8 +990,8 @@ session_start();
                 <h1>Find <span>Trusted Professionals</span> For All Your Needs</h1>
                 <p>Book verified workers for any task at your convenience. Fast, reliable, and hassle-free service.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Find a Worker</button>
-                    <button class="btn btn-secondary">Join as a Worker</button>
+                    <button class="btn btn-primary trigger-modal">Find a Worker</button>
+                    <button class="btn btn-secondary trigger-modal">Join as a Worker</button>
                 </div>
             </div>
         </div>
@@ -934,8 +1002,8 @@ session_start();
                 <h1><span>Premium Services</span> At Your Doorstep</h1>
                 <p>From plumbing to cleaning, we connect you with the best professionals in your area.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Find a Worker</button>
-                    <button class="btn btn-secondary">Join as a Worker</button>
+                    <button class="btn btn-primary trigger-modal">Find a Worker</button>
+                    <button class="btn btn-secondary trigger-modal">Join as a Worker</button>
                 </div>
             </div>
         </div>
@@ -946,8 +1014,8 @@ session_start();
                 <h1>Join Our Growing <span>Community</span> Today</h1>
                 <p>Earn competitive income by offering your skills and services to thousands of customers.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Find a Worker</button>
-                    <button class="btn btn-secondary">Join as a Worker</button>
+                    <button class="btn btn-primary trigger-modal">Find a Worker</button>
+                    <button class="btn btn-secondary trigger-modal">Join as a Worker</button>
                 </div>
             </div>
         </div>
@@ -1143,7 +1211,7 @@ session_start();
                         </div>
                     </div>
 
-                    <button class="btn btn-primary" style="margin-top: 25px; padding: 10px 25px;">Find a Worker
+                    <button class="btn btn-primary trigger-modal" style="margin-top: 25px; padding: 10px 25px;">Find a Worker
                         Now</button>
                 </div>
                 <div class="customer-image">
@@ -1213,7 +1281,7 @@ session_start();
                         </div>
                     </div>
 
-                    <button class="btn btn-secondary" style="margin-top: 25px; padding: 10px 25px;">Join as a
+                    <button class="btn btn-secondary trigger-modal" style="margin-top: 25px; padding: 10px 25px;">Join as a
                         Worker</button>
                 </div>
             </div>
@@ -1285,8 +1353,8 @@ session_start();
             <h2>Ready to Experience Premium Service?</h2>
             <p>Join thousands of satisfied customers and skilled professionals on our platform today.</p>
             <div class="hero-buttons">
-                <button class="btn btn-darker">Find a Worker</button>
-                <button class="btn btn-secondary">Become a Worker</button>
+                <button class="btn btn-darker trigger-modal">Find a Worker</button>
+<button class="btn btn-secondary trigger-modal">Join as a Worker</button>
             </div>
         </div>
     </section>
@@ -1345,6 +1413,20 @@ session_start();
             </div>
         </div>
     </footer>
+    <div id="loginModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <div class="modal-icon">
+      <i class="fas fa-lock"></i>
+    </div>
+    <h2>Login Required</h2>
+    <p>Please login or signup to access all features of Trustyhands</p>
+    <div class="modal-buttons">
+      <a href="research_index.php#signIn" class="btn btn-outline">Log In</a>
+      <a href="research_index.php#signup" class="btn btn-primary">Sign Up</a>
+    </div>
+  </div>
+</div>
 
     <script>
         // Carousel functionality
@@ -1402,6 +1484,34 @@ session_start();
                 });
             });
         });
+        // Get the modal
+  const modal = document.getElementById("loginModal");
+  
+  // Get buttons that open the modal
+  const btns = document.querySelectorAll(".trigger-modal");
+  
+  // Get the <span> element that closes the modal
+  const span = document.querySelector(".close");
+  
+  // When user clicks on a button, open modal
+  btns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.style.display = "block";
+    });
+  });
+  
+  // When user clicks on <span> (x), close modal
+  span.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+  
+  // When user clicks anywhere outside modal, close it
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+
     </script>
 </body>
 

@@ -1,5 +1,4 @@
 <?php
-// Database connection
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -42,14 +41,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $phone = $conn->real_escape_string($_POST['phone']);
         $email = $conn->real_escape_string($_POST['email']);
         $address = $conn->real_escape_string($_POST['address']);
-        $language = $conn->real_escape_string($_POST['language'] ?? '');
+        $city = $conn->real_escape_string($_POST['city']);
         $service = $conn->real_escape_string($_POST['service']);
-        $date = $_POST['date'];
-        $time = $_POST['time'];
-        $urgency = $conn->real_escape_string($_POST['urgency']);
-        $notes = $conn->real_escape_string($_POST['notes'] ?? '');
-        $payment = $conn->real_escape_string($_POST['payment'] ?? '');
         
+        // MODIFIED: Capture new fields
+        $date = $_POST['date'];
+        $problem_description = $conn->real_escape_string($_POST['problem_description'] ?? '');
+        $tools_required = $conn->real_escape_string($_POST['tools_required'] ?? '');
+        $payment = $conn->real_escape_string($_POST['payment'] ?? '');
+
         // Handle file upload
         $image_path = '';
         if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
@@ -70,46 +70,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         try {
             // Insert into customers table
-            $sql = "INSERT INTO customers (full_name, phone_number, email, address, preferred_language) 
-                    VALUES (?, ?, ?, ?, ?)";
+
+            $sql = "INSERT INTO customers (full_name, phone_number, email, address) 
+                    VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssss", $full_name, $phone, $email, $address, $language);
+            $stmt->bind_param("ssss", $full_name, $phone, $email, $address);
             $stmt->execute();
             $customer_id = $stmt->insert_id;
             $stmt->close();
             
-            // Insert into bookings table
-            $preferred_datetime = date('Y-m-d H:i:s', strtotime("$date $time"));
-            $sql = "INSERT INTO bookings (customer_id, service_type, preferred_date, urgency, additional_notes, image_path, payment_mode)
+            // MODIFIED: Insert into bookings table
+            $sql = "INSERT INTO bookings (customer_id, service_type, preferred_date, 
+                    problem_description, tools_required, image_path, payment_mode)
                     VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param(
-                "issssss", 
-                $customer_id, 
-                $service, 
-                $preferred_datetime, 
-                $urgency, 
-                $notes, 
-                $image_path, 
-                $payment
-            );
+            $stmt->bind_param("issssss", $customer_id, $service, $date, 
+                              $problem_description, $tools_required, $image_path, $payment);
             $stmt->execute();
             $booking_id = $stmt->insert_id;
             $stmt->close();
             
             $conn->commit();
             
-            // Get workers for the selected service
-            $sql = "SELECT * FROM workers WHERE service_type = ?";
+            // Get workers for selected service and city
+            $sql = "SELECT * FROM workers 
+                    WHERE service_type = ? 
+                    AND LOWER(location) = LOWER(?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $service);
+            $stmt->bind_param("ss", $service, $city);
             $stmt->execute();
             $result = $stmt->get_result();
             $workers = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
             
             $showWorkerSelection = true;
-            $success = "Booking details saved. Please select a worker:";
+            $success = "Your booking details have been saved. Please contact the worker using their phone number and confirm the worker.";
         } catch (Exception $e) {
             $conn->rollback();
             $error = "Error: " . $e->getMessage();
@@ -126,6 +121,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Book a Worker | TrustyHands</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ... [Existing CSS remains unchanged] ... */
         :root {
             --dark-moss-green: #606c38;
             --pakistan-green: #283618;
@@ -656,28 +652,101 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 grid-template-columns: 1fr;
             }
         }
+        /* NEW: Worker card styles */
+        .worker-card {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+        }
+        
+        .worker-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .worker-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+        }
+        
+        .worker-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .worker-service {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .worker-rating {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .worker-experience {
+            background: rgba(96, 108, 56, 0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+        
+        .worker-select-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, var(--primary), #728c45);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .worker-select-btn:hover {
+            background: linear-gradient(135deg, var(--accent), #dda15e);
+            transform: translateY(-3px);
+        }
+        
+        .workers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
         <div class="container">
             <div class="header-container">
-                <a href="research_homepage1.php" class="logo">
+                <a href="research_homepage.php" class="logo">
                     <i class="fas fa-hands-helping"></i>
                     TrustyHands
                 </a>
             </div>
         </div>
     </header>
-    
-    <!-- Main Content -->
+
     <div class="container">
         <a href="research_homepage1.php" class="back-home">
             <i class="fas fa-arrow-left"></i> Back to Homepage
         </a>
         
-        <!-- Notification Messages -->
         <?php if ($error): ?>
             <div class="notification error"><?= $error ?></div>
         <?php endif; ?>
@@ -691,95 +760,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <h2 class="section-title">Book a TrustyHands Worker</h2>
             
             <div class="booking-container">
-                <div class="service-categories">
-                    <h3><i class="fas fa-list"></i> Service Categories</h3>
-                    <div class="services-grid">
-                        <div class="service-card active" data-service="Plumbing Services">
-                            <div class="service-icon">
-                                <i class="fas fa-faucet"></i>
-                            </div>
-                            <div class="service-title">Plumbing</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Electrical Work">
-                            <div class="service-icon">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div class="service-title">Electrical</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Deep Cleaning">
-                            <div class="service-icon">
-                                <i class="fas fa-broom"></i>
-                            </div>
-                            <div class="service-title">Deep Cleaning</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Carpentry">
-                            <div class="service-icon">
-                                <i class="fas fa-hammer"></i>
-                            </div>
-                            <div class="service-title">Carpentry</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Painting Services">
-                            <div class="service-icon">
-                                <i class="fas fa-paint-roller"></i>
-                            </div>
-                            <div class="service-title">Painting</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="AC Service">
-                            <div class="service-icon">
-                                <i class="fas fa-wind"></i>
-                            </div>
-                            <div class="service-title">AC Service</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Packers & Movers">
-                            <div class="service-icon">
-                                <i class="fas fa-truck-moving"></i>
-                            </div>
-                            <div class="service-title">Packers & Movers</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Kitchen Cleaning">
-                            <div class="service-icon">
-                                <i class="fas fa-utensils"></i>
-                            </div>
-                            <div class="service-title">Kitchen Cleaning</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Event Staffing">
-                            <div class="service-icon">
-                                <i class="fas fa-calendar-alt"></i>
-                            </div>
-                            <div class="service-title">Event Staffing</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Home Sanitization">
-                            <div class="service-icon">
-                                <i class="fas fa-spray-can"></i>
-                            </div>
-                            <div class="service-title">Home Sanitization</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Babysitting">
-                            <div class="service-icon">
-                                <i class="fas fa-baby"></i>
-                            </div>
-                            <div class="service-title">Babysitting</div>
-                        </div>
-                        
-                        <div class="service-card" data-service="Gardening Services">
-                            <div class="service-icon">
-                                <i class="fas fa-seedling"></i>
-                            </div>
-                            <div class="service-title">Gardening</div>
-                        </div>
-                    </div>
-                </div>
-                
                 <div class="booking-form-container">
                     <form method="POST" enctype="multipart/form-data">
                         <!-- Customer Information -->
@@ -805,13 +785,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="language">Preferred Language (optional)</label>
-                                    <input type="text" id="language" name="language" placeholder="English">
+                                    <label for="city" class="required">City</label>
+                                    <input type="text" id="city" name="city" placeholder="Enter your city" required>
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label for="address" class="required">Location / Address</label>
+                                <label for="address" class="required">Full Address</label>
                                 <textarea id="address" name="address" rows="3" placeholder="Enter your full address" required></textarea>
                             </div>
                         </div>
@@ -852,26 +832,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <label for="date" class="required">Preferred Date</label>
                                     <input type="date" id="date" name="date" required>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label for="time" class="required">Preferred Time</label>
-                                    <input type="time" id="time" name="time" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="urgency" class="required">Urgency</label>
-                                    <select id="urgency" name="urgency" required>
-                                        <option value="">Select urgency</option>
-                                        <option value="Immediate">Immediate</option>
-                                        <option value="Within a day">Within a day</option>
-                                        <option value="Flexible">Flexible</option>
-                                    </select>
-                                </div>
+                            </div>
+                            
+                            <!-- MODIFIED: Problem description and tools required -->
+                            <div class="form-group">
+                                <label for="problem-description">Describe the problem</label>
+                                <textarea id="problem-description" name="problem_description" rows="4" 
+                                          placeholder="Describe the issue you're facing..."></textarea>
                             </div>
                             
                             <div class="form-group">
-                                <label for="notes">Additional Notes / Description</label>
-                                <textarea id="notes" name="notes" rows="4" placeholder="Describe the job in detail..."></textarea>
+                                <label for="tools-required">Tools Required (if any)</label>
+                                <textarea id="tools-required" name="tools_required" rows="2" 
+                                          placeholder="List any specific tools needed..."></textarea>
                             </div>
                             
                             <div class="form-group">
@@ -912,7 +885,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <!-- Worker Selection Section -->
         <?php if ($showWorkerSelection): ?>
         <div class="worker-selection">
-            <h2 class="section-title">Select Your Worker</h2>
+            <h2 class="section-title">Select Your Worker in <?= htmlspecialchars($city) ?></h2>
             
             <?php if ($success): ?>
                 <div class="notification success"><?= $success ?></div>
@@ -922,31 +895,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php if (count($workers) > 0): ?>
                     <?php foreach ($workers as $worker): ?>
                     <div class="worker-card">
-                        <?php if (!empty($worker['image_path'])): ?>
-                            <img src="<?= $worker['image_path'] ?>" alt="<?= $worker['full_name'] ?>" class="worker-image">
+                        <?php if (!empty($worker['profile_picture_path'])): ?>
+                            <img src="<?= $worker['profile_picture_path'] ?>" alt="<?= $worker['full_name'] ?>" class="worker-image">
                         <?php else: ?>
-                            <div class="worker-image" style="background: var(--light-background); display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-user" style="font-size: 3rem; color: var(--primary);"></i>
+                            <div class="worker-image" style="background: #fefae0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user" style="font-size: 3rem; color: #606c38;"></i>
                             </div>
                         <?php endif; ?>
                         
                         <h3 class="worker-name"><?= $worker['full_name'] ?></h3>
                         <div class="worker-service"><?= $worker['service_type'] ?></div>
                         
-                        <div class="worker-rating">
-                            <?php for ($i = 0; $i < 5; $i++): ?>
-                                <?php if ($i < floor($worker['rating'])): ?>
-                                    <i class="fas fa-star"></i>
-                                <?php else: ?>
-                                    <i class="far fa-star"></i>
-                                <?php endif; ?>
-                            <?php endfor; ?>
-                            <span>(<?= number_format($worker['rating'], 1) ?>)</span>
-                        </div>
-                        
                         <div class="worker-experience">
                             <i class="fas fa-briefcase"></i> <?= $worker['experience'] ?> years experience
                         </div>
+                        
+                        <div class="worker-detail">
+                            <i class="fas fa-map-marker-alt"></i> <?= $worker['location'] ?>
+                        </div>
+                        
+                        <div class="worker-detail">
+                            <i class="fas fa-clock"></i> <?= $worker['available_hours'] ?>
+                        </div>
+                        
+                        <div class="worker-detail">
+    <i class="fas fa-phone"></i> <?= $worker['phone_number'] ?>
+</div>
                         
                         <form method="POST">
                             <input type="hidden" name="booking_id" value="<?= $booking_id ?>">
@@ -959,7 +933,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="notification error" style="grid-column: 1 / -1; text-align: center;">
-                        No workers available for this service at the moment. Please try again later.
+                        No workers available for <?= htmlspecialchars($service) ?> in <?= htmlspecialchars($city) ?>. Please try a different service or city.
                     </div>
                 <?php endif; ?>
             </div>
@@ -967,7 +941,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
     
-    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -981,18 +954,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <li><a href="#">Careers</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-column">
-                    <h3>Services</h3>
+                    <h3>For Workers</h3>
                     <ul>
-                        <li><a href="#">Plumbing</a></li>
-                        <li><a href="#">Electrical</a></li>
-                        <li><a href="#">Cleaning</a></li>
-                        <li><a href="#">Carpentry</a></li>
-                        <li><a href="#">Painting</a></li>
+                        <li><a href="#">Join Our Team</a></li>
+                        <li><a href="#">Benefits</a></li>
+                        <li><a href="#">Training Programs</a></li>
+                        <li><a href="#">Worker Stories</a></li>
+                        <li><a href="#">FAQ for Workers</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-column">
                     <h3>Support</h3>
                     <ul>
@@ -1003,7 +976,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <li><a href="#">Privacy Policy</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-column">
                     <h3>Contact Us</h3>
                     <ul>
@@ -1019,7 +992,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
             </div>
-            
+
             <div class="copyright">
                 &copy; 2023 TrustyHands. All rights reserved.
             </div>
@@ -1027,24 +1000,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </footer>
     
     <script>
-        // Service card selection
-        const serviceCards = document.querySelectorAll('.service-card');
-        const serviceTypeSelect = document.getElementById('service-type');
-        
-        serviceCards.forEach(card => {
-            card.addEventListener('click', () => {
-                // Remove active class from all cards
-                serviceCards.forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked card
-                card.classList.add('active');
-                
-                // Set the service type in the dropdown
-                const service = card.getAttribute('data-service');
-                serviceTypeSelect.value = service;
-            });
-        });
-        
         // File upload functionality
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('image');
@@ -1066,22 +1021,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Set minimum date to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').min = today;
-        
-        // Set min time to current time for today
-        const timeInput = document.getElementById('time');
-        const dateInput = document.getElementById('date');
-        
-        dateInput.addEventListener('change', function() {
-            if (this.value === today) {
-                const now = new Date();
-                const hours = now.getHours().toString().padStart(2, '0');
-                const minutes = now.getMinutes().toString().padStart(2, '0');
-                timeInput.min = `${hours}:${minutes}`;
-            } else {
-                timeInput.min = '00:00';
-            }
-        });
     </script>
 </body>
 </html>
 <?php $conn->close(); ?>
+

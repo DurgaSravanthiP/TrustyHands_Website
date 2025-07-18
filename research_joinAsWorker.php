@@ -30,6 +30,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $skills = $conn->real_escape_string($_POST['skills']);
     $languages = $conn->real_escape_string($_POST['languages']);
     $available_hours = $conn->real_escape_string($_POST['available_hours']);
+    
+    $min_price_per_hour = $conn->real_escape_string($_POST['min_price_per_hour']);
+    $max_price_per_hour = $conn->real_escape_string($_POST['max_price_per_hour']);
+    
     $agreement = isset($_POST['agreement']) ? 1 : 0;
     $confirmation = isset($_POST['confirmation']) ? 1 : 0;
     
@@ -45,13 +49,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'experience' => $experience,
         'skills' => $skills,
         'languages' => $languages,
-        'available_hours' => $available_hours
+        'available_hours' => $available_hours,
+        'min_price_per_hour' => $min_price_per_hour,
+        'max_price_per_hour' => $max_price_per_hour
     ];
     
     // Validate required fields
     if (empty($full_name) || empty($phone) || empty($email) || empty($dob) || 
         empty($gender) || empty($location) || empty($service_type) || 
-        empty($experience) || empty($languages) || empty($available_hours)) {
+        empty($experience) || empty($languages) || empty($available_hours) || empty($min_price_per_hour) || empty($max_price_per_hour)) { 
         $error = "Please fill all required fields";
     } elseif (!$agreement || !$confirmation) {
         $error = "You must agree to the terms and confirm your information";
@@ -66,22 +72,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Error already set by handleFileUpload
         } else {
             // Insert into workers table
-            $sql = "INSERT INTO workers (
-                full_name, phone_number, email, dob, gender, location, 
-                id_proof_path, service_type, experience, skills, languages, 
-                available_hours, resume_path, profile_picture_path, work_samples_path,
-                agreement_accepted, info_confirmed
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param(
-                "ssssssssissssssii", 
-                $full_name, $phone, $email, $dob, $gender, $location,
-                $id_proof_path, $service_type, $experience, $skills, $languages,
-                $available_hours, $resume_path, $profile_picture_path, $work_samples_path,
-                $agreement, $confirmation
-            );
-            
+            // In the form processing section:
+$sql = "INSERT INTO workers (
+    full_name, phone_number, email, dob, gender, location, 
+    id_proof_path, service_type, experience, skills, languages, 
+    available_hours, 
+    min_price_per_hour, max_price_per_hour, 
+    resume_path, profile_picture_path, work_samples_path,
+    agreement_accepted, info_confirmed
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param(
+    "ssssssssisssddsssii", 
+    $full_name, $phone, $email, $dob, $gender, $location,
+    $id_proof_path, $service_type, $experience, $skills, $languages,
+    $available_hours, 
+    $min_price_per_hour, $max_price_per_hour,
+    $resume_path, $profile_picture_path, $work_samples_path,
+    $agreement, $confirmation
+);
             if ($stmt->execute()) {
                 $success = "Registration successful! Welcome to TrustyHands.";
                 // Clear form data on success
@@ -95,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Function to handle file uploads
+// Function to handle file uploads (unchanged)
 function handleFileUpload($fieldName) {
     global $error;
     $target_dir = "uploads/";
@@ -149,7 +159,6 @@ function handleFileUpload($fieldName) {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -622,12 +631,23 @@ function handleFileUpload($fieldName) {
                 gap: 25px;
             }
         }
+        .preview-price {
+            background: var(--earth-yellow);
+            color: var(--dark-background);
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
+
 <body>
-    <!-- Header -->
-    <header>
+    <!-- ... (header remains unchanged) ... -->
+     <header>
         <div class="container">
             <div class="header-container">
                 <a href="research_homepage1.php" class="logo">
@@ -638,14 +658,14 @@ function handleFileUpload($fieldName) {
         </div>
     </header>
 
-    <!-- Main Content -->
     <div class="container">
-        <a href="research_homepage1.php" class="back-home">
+        <!-- ... (back link remains unchanged) ... -->
+        <a href="research_homepage.php" class="back-home">
             <i class="fas fa-arrow-left"></i> Back to Homepage
         </a>
-
         <div class="registration-section">
-            <h2 class="section-title">Join as a TrustyHands Worker</h2>
+            <!-- ... (title and notifications remain unchanged) ... -->
+             <h2 class="section-title">Join as a TrustyHands Worker</h2>
 
             <!-- Notification Messages -->
             <?php if ($error): ?>
@@ -661,7 +681,7 @@ function handleFileUpload($fieldName) {
             <?php endif; ?>
 
             <form method="POST" enctype="multipart/form-data" class="form-container">
-                <!-- Personal Information -->
+                <!-- ... (personal info section unchanged) ... -->
                 <div class="form-section">
                     <h3><i class="fas fa-user"></i> Personal Information</h3>
 
@@ -728,7 +748,6 @@ function handleFileUpload($fieldName) {
                         </p>
                     </div>
                 </div>
-
                 <!-- Professional Details -->
                 <div class="form-section">
                     <h3><i class="fas fa-tools"></i> Professional Details</h3>
@@ -821,14 +840,33 @@ function handleFileUpload($fieldName) {
                         <input type="text" id="languages" name="languages" placeholder="English, Hindi, etc." required
                             value="<?= isset($formData['languages']) ? htmlspecialchars($formData['languages']) : '' ?>">
                     </div>
+                    <!-- In the Professional Details section -->
+<div class="form-row">
+    <div class="form-group">
+        <label for="available_hours" class="required">Available Working Hours</label>
+        <input type="text" id="available_hours" name="available_hours"
+            placeholder="e.g., 9 AM - 6 PM, Mon-Fri" required
+            value="<?= isset($formData['available_hours']) ? htmlspecialchars($formData['available_hours']) : '' ?>">
+    </div>
+</div>
 
-                    <div class="form-group">
-                        <label for="available_hours" class="required">Available Working Hours</label>
-                        <input type="text" id="available_hours" name="available_hours"
-                            placeholder="e.g., 9 AM - 6 PM, Mon-Fri" required
-                            value="<?= isset($formData['available_hours']) ? htmlspecialchars($formData['available_hours']) : '' ?>">
-                    </div>
-
+<!-- CHANGE: Price range fields -->
+<div class="form-row">
+    <div class="form-group">
+        <label for="min_price_per_hour" class="required">Minimum Rate per Hour (₹)</label>
+        <input type="number" id="min_price_per_hour" name="min_price_per_hour" 
+            placeholder="e.g., 200" min="1" step="1" required
+            value="<?= isset($formData['min_price_per_hour']) ? htmlspecialchars($formData['min_price_per_hour']) : '' ?>">
+    </div>
+    
+    <div class="form-group">
+        <label for="max_price_per_hour" class="required">Maximum Rate per Hour (₹)</label>
+        <input type="number" id="max_price_per_hour" name="max_price_per_hour" 
+            placeholder="e.g., 500" min="1" step="1" required
+            value="<?= isset($formData['max_price_per_hour']) ? htmlspecialchars($formData['max_price_per_hour']) : '' ?>">
+    </div>
+</div>
+                    
                     <div class="form-group">
                         <label for="resume">Upload Resume or Certificate (optional)</label>
                         <div class="upload-area" id="resume-area">
@@ -846,6 +884,7 @@ function handleFileUpload($fieldName) {
 
                 <!-- Media -->
                 <div class="form-section">
+                    <!-- ... (title and file uploads unchanged) ... -->
                     <h3><i class="fas fa-images"></i> Media</h3>
 
                     <div class="form-row">
@@ -887,6 +926,7 @@ function handleFileUpload($fieldName) {
                         <div class="preview-info">
                             <div class="preview-name" id="preview-name">Your Name</div>
                             <div class="preview-service" id="preview-service">Service Type</div>
+                            <div class="preview-price" id="preview-price">₹0/hour</div>
                             <div class="preview-details">
                                 <div class="preview-detail">
                                     <i class="fas fa-briefcase"></i>
@@ -904,8 +944,7 @@ function handleFileUpload($fieldName) {
                         </div>
                     </div>
                 </div>
-
-                <!-- Agreement -->
+                <!-- ... (agreement section unchanged) ... -->
                 <div class="form-section">
                     <h3><i class="fas fa-check-circle"></i> Agreement / Confirmation</h3>
 
@@ -930,8 +969,8 @@ function handleFileUpload($fieldName) {
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
+    <!-- ... (footer unchanged) ... -->
+     <footer>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
@@ -1075,8 +1114,51 @@ function handleFileUpload($fieldName) {
 
         document.getElementById('dob').max = maxDob.toISOString().split('T')[0];
         document.getElementById('dob').min = minDob.toISOString().split('T')[0];
+        // Update preview function
+function updatePreview() {
+    if (nameInput.value) {
+        document.getElementById('preview-name').textContent = nameInput.value;
+        document.getElementById('preview-container').style.display = 'flex';
+    }
+
+    if (serviceSelect.value) {
+        document.getElementById('preview-service').textContent = serviceSelect.options[serviceSelect.selectedIndex].text;
+    }
+
+    if (experienceSelect.value) {
+        const expText = experienceSelect.options[experienceSelect.selectedIndex].text;
+        document.getElementById('preview-experience').textContent = expText;
+    }
+
+    if (locationInput.value) {
+        document.getElementById('preview-location').textContent = locationInput.value;
+    }
+
+    if (hoursInput.value) {
+        document.getElementById('preview-hours').textContent = hoursInput.value;
+    }
+    
+    // CHANGE: Price range preview
+    if (minPriceInput.value && maxPriceInput.value) {
+        document.getElementById('preview-price').textContent = 
+            `₹${minPriceInput.value} - ₹${maxPriceInput.value}/hour`;
+    }
+}
+
+// Add event listeners for all relevant fields
+nameInput.addEventListener('input', updatePreview);
+serviceSelect.addEventListener('change', updatePreview);
+experienceSelect.addEventListener('change', updatePreview);
+locationInput.addEventListener('input', updatePreview);
+hoursInput.addEventListener('input', updatePreview);
+
+// CHANGE: Add price inputs
+const minPriceInput = document.getElementById('min_price_per_hour');
+const maxPriceInput = document.getElementById('max_price_per_hour');
+minPriceInput.addEventListener('input', updatePreview);
+maxPriceInput.addEventListener('input', updatePreview);
+
     </script>
 </body>
-
 </html>
-<?php $conn->close(); ?>
+<?php $conn->close(); ?> 

@@ -705,53 +705,63 @@ session_start();
     <section class="contact-section">
         <div class="container">
             <div class="contact-container">
-                <div class="contact-form-container">
-                    <div class="contact-card">
-                        <h2>Send Us a Message</h2>
-                        <form id="contactForm">
-                            <div class="form-group">
-                                <label for="name">Full Name</label>
-                                <input type="text" id="name" placeholder="Enter your full name" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="email">Email Address</label>
-                                <input type="email" id="email" placeholder="Enter your email" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="phone">Phone Number</label>
-                                <input type="tel" id="phone" placeholder="Enter your phone number">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="subject">Subject</label>
-                                <select id="subject" required>
-                                    <option value="" disabled selected>Select a subject</option>
-                                    <option value="service">Service Inquiry</option>
-                                    <option value="support">Technical Support</option>
-                                    <option value="billing">Billing Question</option>
-                                    <option value="worker">Become a Worker</option>
-                                    <option value="feedback">Feedback/Suggestions</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="message">Message</label>
-                                <textarea id="message" placeholder="How can we help you?" required></textarea>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">Send Message</button>
-                        </form>
-                        
-                        <div class="form-success" id="formSuccess">
-                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 12px;"></i>
-                            <h3>Message Sent Successfully!</h3>
-                            <p>Thank you for contacting us. We'll get back to you within 24 hours.</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Replace the existing form section with this code -->
+<div class="contact-form-container">
+    <div class="contact-card">
+        <h2>Send Us a Message</h2>
+        <form id="contactForm" action="research_contactUsBackend.php" method="POST">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number">
+            </div>
+            
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" required>
+                    <option value="" disabled selected>Select a subject</option>
+                    <option value="service">Service Inquiry</option>
+                    <option value="support">Technical Support</option>
+                    <option value="billing">Billing Question</option>
+                    <option value="worker">Become a Worker</option>
+                    <option value="feedback">Feedback/Suggestions</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="How can we help you?" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">Send Message</button>
+        </form>
+        
+        <?php if(isset($_SESSION['form_success'])): ?>
+            <div class="form-success" id="formSuccess" style="display: block;">
+                <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 12px;"></i>
+                <h3>Message Sent Successfully!</h3>
+                <p>Thank you for contacting us. We'll get back to you within 24 hours.</p>
+            </div>
+            <?php unset($_SESSION['form_success']); ?>
+        <?php else: ?>
+            <div class="form-success" id="formSuccess">
+                <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 12px;"></i>
+                <h3>Message Sent Successfully!</h3>
+                <p>Thank you for contacting us. We'll get back to you within 24 hours.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
                 
                 <div class="contact-info-container">
                     <div class="contact-card">
@@ -986,50 +996,44 @@ session_start();
             </div>
         </div>
     </footer>
-
     <script>
         // Function to toggle FAQ
         function toggleFaq(element) {
             const answer = element.nextElementSibling;
             const isActive = answer.classList.contains('active');
-            
+
             // Close all open FAQs
             document.querySelectorAll('.faq-answer').forEach(ans => {
                 ans.classList.remove('active');
             });
-            
+
             // Toggle the clicked FAQ
             if (!isActive) {
                 answer.classList.add('active');
             }
         }
         
-        // Form submission
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Show success message
-            document.getElementById('formSuccess').style.display = 'block';
-            
-            // Reset form after 3 seconds
-            setTimeout(function() {
-                document.getElementById('contactForm').reset();
-                document.getElementById('formSuccess').style.display = 'none';
-            }, 5000);
-        });
-        
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set active navigation
-            const navLinks = document.querySelectorAll('nav a');
-            navLinks.forEach(link => {
-                if (link.textContent === 'Contact Us') {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-        });
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set active navigation
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+        if (link.textContent === 'Contact Us') {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+    
+    // Auto-hide success message after 5 seconds
+    const successMessage = document.getElementById('formSuccess');
+    if (successMessage.style.display === 'block') {
+        setTimeout(() => {
+            successMessage.style.display = 'none';
+        }, 5000);
+    }
+});
     </script>
 </body>
 </html>
